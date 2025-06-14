@@ -2,34 +2,42 @@ import streamlit as st
 import openai
 from streamlit_drawable_canvas import st_canvas
 
-st.set_page_config(page_title="AI Prompt Refiner – z klikaniem", layout="centered")
+st.set_page_config(page_title="AI Prompt Refiner – klikany", layout="centered")
 st.title("🖱️ AI Prompt Refiner z klikaniem")
 
-openai.api_key = st.secrets["openai"]["api_key"]
+# Ręczne wprowadzenie klucza
+api_key = st.text_input("🔑 Wklej swój OpenAI API Key", type="password")
+
+# Prompt od użytkownika
 prompt = st.text_input("✏️ Twój prompt:", value="butelka e-liquidu w stylu zen")
 
-# Zmienna do przechowania obrazu
 image_url = None
 
-# Generowanie obrazu z DALL·E
+# Generowanie obrazu
 if st.button("🎨 Wygeneruj obraz"):
-    if prompt:
+    if prompt and api_key:
+        openai.api_key = api_key
         with st.spinner("Generuję obraz..."):
-            response = openai.images.generate(
-                model="dall-e-3",
-                prompt=prompt,
-                size="512x512",
-                quality="standard",
-                n=1
-            )
-            image_url = response.data[0].url
-            st.session_state["image_url"] = image_url
+            try:
+                response = openai.images.generate(
+                    model="dall-e-3",
+                    prompt=prompt,
+                    size="512x512",
+                    quality="standard",
+                    n=1
+                )
+                image_url = response.data[0].url
+                st.session_state["image_url"] = image_url
+            except Exception as e:
+                st.error(f"Błąd: {str(e)}")
+    else:
+        st.warning("Uzupełnij prompt i klucz API.")
 
-# Pokazujemy wygenerowany obraz z możliwością klikania
+# Pokazanie obrazu i dodawanie punktów
 image_url = st.session_state.get("image_url", None)
 
 if image_url:
-    st.image(image_url, caption="Kliknij, aby zaznaczyć obiekty do zmiany")
+    st.image(image_url, caption="Kliknij, aby zaznaczyć elementy")
 
     canvas_result = st_canvas(
         fill_color="rgba(255, 0, 0, 0.3)",
@@ -47,7 +55,7 @@ if image_url:
 
     komentarze = []
     if points:
-        st.subheader("💬 Komentarze do punktów:")
+        st.subheader("💬 Komentarze do zaznaczonych punktów:")
         for i, punkt in enumerate(points):
             komentarz = st.text_input(f"Punkt {i+1} – opis:", key=f"komentarz_{i}")
             komentarze.append(komentarz)
@@ -58,4 +66,4 @@ if image_url:
             st.markdown("🆕 **Nowy prompt:**")
             st.code(nowy_prompt)
         else:
-            st.info("Dodaj przynajmniej jeden komentarz.")
+            st.info("Dodaj komentarze, aby stworzyć nowy prompt.")
