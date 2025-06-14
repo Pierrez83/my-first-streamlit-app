@@ -4,13 +4,15 @@ import openai
 st.set_page_config(page_title="AI Prompt Refiner", layout="centered")
 st.title("🔁 AI Prompt Refiner – wersja demo")
 
+# Ustawienie klucza z pliku secrets.toml
 openai.api_key = st.secrets["openai"]["api_key"]
+
+# Pole tekstowe na prompt
 prompt = st.text_input("✏️ Twój prompt (np. butelka e-liquidu w stylu zen):")
 
-# PRZYCISK: generuj pierwszy obraz
+# Przycisk generowania obrazu
 if st.button("🎨 Generuj obraz"):
-    if prompt and api_key:
-        openai.api_key = api_key
+    if prompt:
         with st.spinner("Generuję obraz..."):
             response = openai.images.generate(
                 model="dall-e-3",
@@ -25,7 +27,7 @@ if st.button("🎨 Generuj obraz"):
             st.markdown("---")
             st.subheader("🔧 Co chcesz zmodyfikować w tym obrazie?")
 
-            # PRZYKŁADOWE CECHY OBRAZU DO ZAZNACZENIA
+            # Checkboxy z opcjami
             tlo = st.checkbox("🟩 Tło (ciemne)")
             obiekt = st.checkbox("🧴 Butelka")
             styl = st.checkbox("🧘‍♀️ Styl zen")
@@ -45,4 +47,4 @@ if st.button("🎨 Generuj obraz"):
                 else:
                     st.info("Zaznacz, co chcesz zmienić.")
     else:
-        st.warning("Uzupełnij prompt i klucz API.")
+        st.warning("Uzupełnij prompt.")
