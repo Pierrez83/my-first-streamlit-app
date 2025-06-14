@@ -48,7 +48,7 @@ if submitted:
     if use_sample:
         try:
             image = Image.open("sample.jpg")
-            st.image(image, caption="Sample image", use_column_width=True)
+            st.image(image, caption="Sample image", use_container_width=True)
             st.session_state.image_generated = True
         except FileNotFoundError:
             st.warning("Sample image not found.")
