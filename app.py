@@ -1,5 +1,6 @@
 import streamlit as st
-from PIL import Image, ImageDraw
+from PIL import Image
+from streamlit_drawable_canvas import st_canvas
 import os
 
 # --- Page Config ---
@@ -76,30 +77,33 @@ if st.session_state.image_generated:
     st.markdown("### ✅ Step 2: Modify")
     st.markdown("*Focus on large structural changes to the image. Details like texture, lighting, or text should be added in Step 3: Refine.*")
 
-    st.markdown("**Mark area directly on sample image (rectangular coordinates):**")
     st.session_state.lasso_mode = st.radio("Select mode:", ["Keep (🟢)", "Remove (🔴)"])
+    desc = st.text_input("Describe selected area:", placeholder="e.g. Remove tree on the left")
 
-    with st.form("region_selector"):
-        x = st.number_input("X (left)", min_value=0, value=0)
-        y = st.number_input("Y (top)", min_value=0, value=0)
-        width = st.number_input("Width", min_value=1, value=100)
-        height = st.number_input("Height", min_value=1, value=100)
-        desc = st.text_area("Describe what this selection means:", placeholder="e.g. Remove the tree from the bottom-left")
-        confirm = st.form_submit_button("➕ Add region")
+    st.markdown("**Draw on image below:**")
 
-    if confirm:
-        region_info = f"[{st.session_state.lasso_mode}] Rectangle at ({x},{y},{width},{height}) – {desc.strip()}"
-        st.session_state.modifications.append(region_info)
+    sample_path = "sample.jpg"
+    if os.path.exists(sample_path):
+        image = Image.open(sample_path)
+        canvas_result = st_canvas(
+            fill_color="rgba(255, 0, 0, 0.3)" if "Remove" in st.session_state.lasso_mode else "rgba(0, 255, 0, 0.3)",
+            stroke_width=3,
+            stroke_color="#ff0000" if "Remove" in st.session_state.lasso_mode else "#00ff00",
+            background_image=image,
+            update_streamlit=True,
+            height=image.height,
+            width=image.width,
+            drawing_mode="rect",
+            key="canvas",
+        )
 
-        # Draw rectangle preview (optional)
-        try:
-            img = Image.open("sample.jpg").convert("RGB")
-            draw = ImageDraw.Draw(img)
-            color = "green" if "Keep" in st.session_state.lasso_mode else "red"
-            draw.rectangle([x, y, x + width, y + height], outline=color, width=4)
-            st.image(img, caption="Preview with marked region", use_container_width=True)
-        except Exception as e:
-            st.warning(f"Preview failed: {e}")
+        if st.button("➕ Add drawn selection"):
+            if canvas_result.json_data and desc.strip():
+                st.session_state.modifications.append(
+                    f"[{st.session_state.lasso_mode}] Drawn area – {desc.strip()}"
+                )
+    else:
+        st.warning("sample.jpg not found")
 
     if st.session_state.modifications:
         st.markdown("#### 📝 Current modifications queue:")
