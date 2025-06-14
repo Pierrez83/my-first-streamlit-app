@@ -13,8 +13,8 @@ if "angle_horizontal" not in st.session_state:
     st.session_state.angle_horizontal = 0
 if "angle_vertical" not in st.session_state:
     st.session_state.angle_vertical = 0
-if "angle_rotation" not in st.session_state:
-    st.session_state.angle_rotation = 0
+if "use_uploaded_photo" not in st.session_state:
+    st.session_state.use_uploaded_photo = False
 
 # --- Step Header ---
 st.markdown("""
@@ -24,49 +24,54 @@ st.markdown("""
 ---
 """)
 
-# --- Step 1: Packaging Selection ---
-st.markdown("#### 🧴 Select a packaging type:")
-package_options = ["Box", "Bottle", "Jar", "Pouch"]
-st.session_state.package_type = st.selectbox("Packaging Type", package_options, index=1)
+# --- Step 1: Choose Packaging Type ---
+st.markdown("#### 🧴 Select a packaging type or upload your own product photo:")
 
-# --- Image Preview ---
-type_to_image = {
-    "Box": "images/box_front.png",
-    "Bottle": "images/bottle_front.png",
-    "Jar": "images/jar_front.png",
-    "Pouch": "images/pouch_front.png"
-}
-if st.session_state.package_type in type_to_image:
-    try:
-        st.image(type_to_image[st.session_state.package_type], width=250, caption="Preview")
-    except:
-        st.warning("Preview image not found.")
+# Option to upload a photo instead of selecting packaging
+st.session_state.use_uploaded_photo = st.checkbox("I already have a photo of the product")
 
-# --- Sliders Layout ---
-st.divider()
-st.markdown("### 🎛️ Adjust Camera Angles:")
+if st.session_state.use_uploaded_photo:
+    uploaded_file = st.file_uploader("Upload your product image (JPG or PNG)", type=["jpg", "jpeg", "png"])
+    if uploaded_file is not None:
+        st.image(uploaded_file, caption="Uploaded image", use_column_width=True)
+        if st.button("Use this as mockup ➡️"):
+            st.session_state.step = 3
+            st.experimental_rerun()
+else:
+    package_options = ["Box", "Bottle", "Jar", "Pouch"]
+    st.session_state.package_type = st.selectbox("Packaging Type", package_options, index=1)
 
-# Horizontal rotation (left ↔ right)
-st.session_state.angle_horizontal = st.slider(
-    "🌀 Rotate product (left/right)", min_value=-180, max_value=180, value=0, step=15)
+    # Display placeholder image based on selected package type
+    type_to_image = {
+        "Box": "images/box_front.png",
+        "Bottle": "images/bottle_front.png",
+        "Jar": "images/jar_front.png",
+        "Pouch": "images/pouch_front.png"
+    }
 
-# Vertical tilt (camera up/down)
-cols = st.columns([5, 1])
-with cols[1]:
-    st.session_state.angle_vertical = st.slider(
-        "🔼🔽 Tilt camera (up/down)", min_value=-90, max_value=90, value=0, step=15,
-        label_visibility="collapsed")
+    if st.session_state.package_type in type_to_image:
+        try:
+            st.image(type_to_image[st.session_state.package_type], width=200, caption="Preview")
+        except:
+            st.warning("Preview image not found.")
 
-# Rotation around vertical axis (roll)
-st.session_state.angle_rotation = st.slider(
-    "🔁 Rotate around product axis (e.g. twist bottle)", min_value=-180, max_value=180, value=0, step=15)
+    # Show horizontal angle slider under the preview
+    st.session_state.angle_horizontal = st.slider(
+        "Rotate product left ↔ right", min_value=-90, max_value=90, value=0, step=15, key="horizontal_slider")
 
-# --- Proceed ---
-if st.button("Next ➡️", key="to_step3"):
-    st.session_state.step = 3
-    st.experimental_rerun()
+    # Show vertical angle slider on the right
+    with st.container():
+        cols = st.columns([5, 1])
+        with cols[1]:
+            st.session_state.angle_vertical = st.slider(
+                "Tilt up/down", min_value=0, max_value=90, value=0, step=15, key="vertical_slider", label_visibility="collapsed")
 
-# --- Step 3 Placeholder ---
+    # Proceed button
+    if st.button("Next ➡️", key="to_step3"):
+        st.session_state.step = 3
+        st.experimental_rerun()
+
+# --- Placeholder for Step 3 ---
 if st.session_state.step == 3:
     st.markdown("""
     ### 🎨 Step 3: Upload Label & Generate
