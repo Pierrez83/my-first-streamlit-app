@@ -29,23 +29,27 @@ with st.form("prompt_form"):
         "Illustration", "Etching", "Photography", "Render", "Oil painting", "Watercolor"
     ], horizontal=True)
 
-    st.markdown("**Select main colors:**")
-    for i, color in enumerate(st.session_state.colors):
-        cols = st.columns([0.15, 0.85])
-        with cols[0]:
-            if st.button("❌", key=f"remove_{i}"):
-                st.session_state.colors.pop(i)
-                st.experimental_rerun()
-        with cols[1]:
-            new_color = st.color_picker("", color, key=f"color_{i}", label_visibility="collapsed")
-            st.session_state.colors[i] = new_color
-
-    if st.button("➕ Add color"):
-        st.session_state.colors.append("#FFFFFF")
-
     use_sample = st.checkbox("Use sample image instead of generating with API")
 
     submitted = st.form_submit_button("🧠 Generate image")
+
+# --- Color Picker Section (outside form) ---
+st.markdown("**Select main colors:**")
+i = 0
+while i < len(st.session_state.colors):
+    cols = st.columns([0.15, 0.85])
+    with cols[0]:
+        if st.button("❌", key=f"remove_{i}"):
+            st.session_state.colors.pop(i)
+            st.experimental_rerun()
+    with cols[1]:
+        new_color = st.color_picker("", st.session_state.colors[i], key=f"color_{i}", label_visibility="collapsed")
+        st.session_state.colors[i] = new_color
+    i += 1
+
+if st.button("➕ Add color"):
+    st.session_state.colors.append("#FFFFFF")
+    st.experimental_rerun()
 
 # --- Image Display ---
 st.markdown("""
