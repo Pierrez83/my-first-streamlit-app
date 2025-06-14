@@ -12,6 +12,8 @@ if "colors" not in st.session_state:
     st.session_state.colors = ["#7F4A4A", "#4A7F4A", "#FFFFFF"]
 if "modifications" not in st.session_state:
     st.session_state.modifications = []
+if "lasso_mode" not in st.session_state:
+    st.session_state.lasso_mode = "Keep"
 
 # --- Title & Steps ---
 st.markdown("""
@@ -72,20 +74,23 @@ if st.session_state.image_generated:
     st.success("Step 1 complete. You can now continue to Step 2 and Step 3!")
 
     st.markdown("### ✅ Step 2: Modify")
-    st.markdown("*In this step, focus on large structural changes (composition, layout, elements). Save details like texture, text, or lighting for Step 3 (Refine).*")
+    st.markdown("*Focus on large structural changes to the image. Details like texture, lighting, or text should be added in Step 3: Refine.*")
 
-    with st.form("modify_form"):
-        mod_text = st.text_area("Describe a major modification you'd like to apply:")
-        add_mod = st.form_submit_button("💡 Add modification")
+    st.markdown("**Lasso tool mockup:**")
+    st.session_state.lasso_mode = st.radio("Select lasso mode:", ["Keep (🟢)", "Remove (🔴)"])
 
-        if add_mod and mod_text.strip():
-            st.session_state.modifications.append(mod_text.strip())
+    st.file_uploader("Upload a lasso-marked image (mockup only):", type=["jpg", "png"], key="lasso_upload")
+
+    with st.form("lasso_instruction_form"):
+        lasso_desc = st.text_area("Describe what the marked area should represent:", placeholder="e.g. Remove the red object in the bottom-left")
+        save_instr = st.form_submit_button("➕ Add instruction")
+        if save_instr and lasso_desc.strip():
+            st.session_state.modifications.append(f"[{st.session_state.lasso_mode}] {lasso_desc.strip()}")
 
     if st.session_state.modifications:
-        st.markdown("#### 🔁 Your modifications:")
-        for idx, mod in enumerate(st.session_state.modifications):
+        st.markdown("#### 📝 Current modifications queue:")
+        for mod in st.session_state.modifications:
             st.markdown(f"- {mod}")
 
     st.markdown("---")
     st.markdown("### 🔒 Step 3: Refine")
-
