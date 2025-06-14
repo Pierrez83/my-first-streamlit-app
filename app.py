@@ -1,82 +1,55 @@
 import streamlit as st
-import openai
-import requests
-from io import BytesIO
 from PIL import Image
-from streamlit_drawable_canvas import st_canvas
+import os
 
-st.set_page_config(page_title="AI Prompt Refiner – klikany", layout="centered")
-st.title("🖱️ AI Prompt Refiner z klikaniem")
+st.set_page_config(page_title="Visual Prompt Tool", layout="centered")
 
-# 🔑 Ręczne wprowadzanie klucza
-api_key = st.text_input("🔑 Wklej swój OpenAI API Key", type="password")
+# --- Header navigation ---
+st.markdown("""
+### 🧠 Step 1: Create &nbsp;&nbsp;&nbsp;&nbsp;🔒 Step 2: Modify &nbsp;&nbsp;&nbsp;&nbsp;🔒 Step 3: Refine
+""")
 
-# ✏️ Prompt użytkownika
-prompt = st.text_input("✏️ Twój prompt:", value="butelka e-liquidu w stylu zen")
+st.markdown("---")
 
-image_url = None
+# --- Prompt input ---
+prompt = st.text_area("Describe your idea:", placeholder="e.g. A peaceful garden with misty mountains...", height=100)
 
-# 🎨 Generowanie obrazu
-if st.button("🎨 Wygeneruj obraz"):
-    if prompt and api_key:
-        openai.api_key = api_key
-        with st.spinner("Generuję obraz..."):
-            try:
-                response = openai.images.generate(
-                    model="dall-e-3",
-                    prompt=prompt,
-                    size="1024x1024",
-                    quality="standard",
-                    n=1
-                )
-                image_url = response.data[0].url
-                st.session_state["image_url"] = image_url
-            except Exception as e:
-                st.error(f"Błąd: {str(e)}")
+# --- Format selection ---
+st.markdown("**Select format:**")
+formats = ["3:2", "1:1", "2:3"]
+selected_format = st.radio("", formats, horizontal=True, label_visibility="collapsed")
+
+# --- Style selection ---
+st.markdown("**Select style:**")
+styles = ["Illustration", "Etching", "Photography", "Render", "Oil painting", "Watercolor"]
+selected_style = st.radio("", styles, horizontal=True, label_visibility="collapsed")
+
+# --- Color selection ---
+st.markdown("**Select main colors:**")
+color_col1, color_col2 = st.columns([6, 1])
+
+if 'colors' not in st.session_state:
+    st.session_state.colors = []
+
+with color_col1:
+    for idx, color in enumerate(st.session_state.colors):
+        col = st.color_picker("", color, label_visibility="collapsed", key=f"cp_{idx}")
+        st.session_state.colors[idx] = col
+
+with color_col2:
+    if st.button("➕"):
+        st.session_state.colors.append("#ffffff")
+
+# --- Generate button ---
+st.markdown("---")
+generate = st.button("🎨 Generate image")
+
+# --- Output ---
+if generate:
+    st.subheader("🔍 Generated preview")
+    image_path = "Zrzut ekranu 2025-06-14 o 17.03.10.png"
+    if os.path.exists(image_path):
+        img = Image.open(image_path)
+        st.image(img, use_column_width=True)
     else:
-        st.warning("Uzupełnij prompt i klucz API.")
-
-# 🖼️ Wyświetlenie i zaznaczanie
-image_url = st.session_state.get("image_url", None)
-
-if image_url:
-    # Pobierz i załaduj obraz jako PIL
-    try:
-        response = requests.get(image_url)
-        background_image = Image.open(BytesIO(response.content))
-    except Exception as e:
-        st.error(f"Nie udało się załadować obrazu: {e}")
-        background_image = None
-
-    if background_image:
-        st.image(background_image, caption="Kliknij, aby zaznaczyć elementy")
-
-        # Canvas z tłem
-        canvas_result = st_canvas(
-            fill_color="rgba(255, 0, 0, 0.3)",
-            stroke_width=3,
-            stroke_color="#ff0000",
-            background_image=background_image,
-            update_streamlit=True,
-            height=1024,
-            width=1024,
-            drawing_mode="point",
-            key="canvas",
-        )
-
-        points = canvas_result.json_data["objects"] if canvas_result.json_data else []
-
-        komentarze = []
-        if points:
-            st.subheader("💬 Komentarze do zaznaczonych punktów:")
-            for i, punkt in enumerate(points):
-                komentarz = st.text_input(f"Punkt {i+1} – opis:", key=f"komentarz_{i}")
-                komentarze.append(komentarz)
-
-        if st.button("♻️ Wygeneruj nowy prompt"):
-            if komentarze:
-                nowy_prompt = prompt + ". " + ". ".join(komentarze)
-                st.markdown("🆕 **Nowy prompt:**")
-                st.code(nowy_prompt)
-            else:
-                st.info("Dodaj komentarze, aby stworzyć nowy prompt.")
+        st.warning("Sample image not found.")
