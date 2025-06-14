@@ -5,15 +5,15 @@ from streamlit_drawable_canvas import st_canvas
 st.set_page_config(page_title="AI Prompt Refiner – klikany", layout="centered")
 st.title("🖱️ AI Prompt Refiner z klikaniem")
 
-# Ręczne wprowadzenie klucza
+# Klucz API – ręcznie wprowadzany
 api_key = st.text_input("🔑 Wklej swój OpenAI API Key", type="password")
 
-# Prompt od użytkownika
+# Prompt użytkownika
 prompt = st.text_input("✏️ Twój prompt:", value="butelka e-liquidu w stylu zen")
 
 image_url = None
 
-# Generowanie obrazu
+# Przycisk generowania obrazu
 if st.button("🎨 Wygeneruj obraz"):
     if prompt and api_key:
         openai.api_key = api_key
@@ -22,7 +22,7 @@ if st.button("🎨 Wygeneruj obraz"):
                 response = openai.images.generate(
                     model="dall-e-3",
                     prompt=prompt,
-                    size="512x512",
+                    size="1024x1024",  # ✅ poprawny rozmiar!
                     quality="standard",
                     n=1
                 )
@@ -33,7 +33,7 @@ if st.button("🎨 Wygeneruj obraz"):
     else:
         st.warning("Uzupełnij prompt i klucz API.")
 
-# Pokazanie obrazu i dodawanie punktów
+# Pokazanie obrazu i zaznaczanie punktów
 image_url = st.session_state.get("image_url", None)
 
 if image_url:
