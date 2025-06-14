@@ -8,6 +8,8 @@ st.set_page_config(page_title="AI Prompt Refiner", layout="centered")
 # --- Session State Init ---
 if "image_generated" not in st.session_state:
     st.session_state.image_generated = False
+if "colors" not in st.session_state:
+    st.session_state.colors = ["#7F4A4A", "#4A7F4A", "#FFFFFF"]
 
 # --- Title & Steps ---
 st.markdown("""
@@ -27,24 +29,19 @@ with st.form("prompt_form"):
         "Illustration", "Etching", "Photography", "Render", "Oil painting", "Watercolor"
     ], horizontal=True)
 
-    # --- Dynamic Color Pickers ---
-if "colors" not in st.session_state:
-    st.session_state.colors = ["#7F4A4A", "#4A7F4A", "#FFFFFF"]
+    st.markdown("**Select main colors:**")
+    for i, color in enumerate(st.session_state.colors):
+        cols = st.columns([0.15, 0.85])
+        with cols[0]:
+            if st.button("❌", key=f"remove_{i}"):
+                st.session_state.colors.pop(i)
+                st.experimental_rerun()
+        with cols[1]:
+            new_color = st.color_picker("", color, key=f"color_{i}", label_visibility="collapsed")
+            st.session_state.colors[i] = new_color
 
-st.markdown("**Select main colors:**")
-for i, color in enumerate(st.session_state.colors):
-    cols = st.columns([0.15, 0.85])
-    with cols[0]:
-        if st.button("❌", key=f"remove_{i}"):
-            st.session_state.colors.pop(i)
-            st.experimental_rerun()
-    with cols[1]:
-        new_color = st.color_picker("", color, key=f"color_{i}", label_visibility="collapsed")
-        st.session_state.colors[i] = new_color
-
-if st.button("➕ Add color"):
-    st.session_state.colors.append("#FFFFFF")
-
+    if st.button("➕ Add color"):
+        st.session_state.colors.append("#FFFFFF")
 
     use_sample = st.checkbox("Use sample image instead of generating with API")
 
