@@ -1,50 +1,61 @@
 import streamlit as st
 import openai
+from streamlit_drawable_canvas import st_canvas
 
-st.set_page_config(page_title="AI Prompt Refiner", layout="centered")
-st.title("🔁 AI Prompt Refiner – wersja demo")
+st.set_page_config(page_title="AI Prompt Refiner – z klikaniem", layout="centered")
+st.title("🖱️ AI Prompt Refiner z klikaniem")
 
-# Ustawienie klucza z pliku secrets.toml
 openai.api_key = st.secrets["openai"]["api_key"]
+prompt = st.text_input("✏️ Twój prompt:", value="butelka e-liquidu w stylu zen")
 
-# Pole tekstowe na prompt
-prompt = st.text_input("✏️ Twój prompt (np. butelka e-liquidu w stylu zen):")
+# Zmienna do przechowania obrazu
+image_url = None
 
-# Przycisk generowania obrazu
-if st.button("🎨 Generuj obraz"):
+# Generowanie obrazu z DALL·E
+if st.button("🎨 Wygeneruj obraz"):
     if prompt:
         with st.spinner("Generuję obraz..."):
             response = openai.images.generate(
                 model="dall-e-3",
                 prompt=prompt,
-                size="1024x1024",
+                size="512x512",
                 quality="standard",
                 n=1
             )
             image_url = response.data[0].url
-            st.image(image_url, caption="Wygenerowany obraz")
+            st.session_state["image_url"] = image_url
 
-            st.markdown("---")
-            st.subheader("🔧 Co chcesz zmodyfikować w tym obrazie?")
+# Pokazujemy wygenerowany obraz z możliwością klikania
+image_url = st.session_state.get("image_url", None)
 
-            # Checkboxy z opcjami
-            tlo = st.checkbox("🟩 Tło (ciemne)")
-            obiekt = st.checkbox("🧴 Butelka")
-            styl = st.checkbox("🧘‍♀️ Styl zen")
-            tekst = st.checkbox("🔤 Tekst na etykiecie")
+if image_url:
+    st.image(image_url, caption="Kliknij, aby zaznaczyć obiekty do zmiany")
 
-            if st.button("♻️ Wygeneruj nowy prompt"):
-                zmiany = []
-                if tlo: zmiany.append("zmień tło")
-                if obiekt: zmiany.append("zmień wygląd butelki")
-                if styl: zmiany.append("zmień styl z zen na inny")
-                if tekst: zmiany.append("usuń tekst z etykiety")
+    canvas_result = st_canvas(
+        fill_color="rgba(255, 0, 0, 0.3)",
+        stroke_width=3,
+        stroke_color="#ff0000",
+        background_image=image_url,
+        update_streamlit=True,
+        height=512,
+        width=512,
+        drawing_mode="point",
+        key="canvas",
+    )
 
-                if zmiany:
-                    nowy_prompt = prompt + ". " + ". ".join(zmiany)
-                    st.markdown("🆕 **Nowy prompt:**")
-                    st.code(nowy_prompt)
-                else:
-                    st.info("Zaznacz, co chcesz zmienić.")
-    else:
-        st.warning("Uzupełnij prompt.")
+    points = canvas_result.json_data["objects"] if canvas_result.json_data else []
+
+    komentarze = []
+    if points:
+        st.subheader("💬 Komentarze do punktów:")
+        for i, punkt in enumerate(points):
+            komentarz = st.text_input(f"Punkt {i+1} – opis:", key=f"komentarz_{i}")
+            komentarze.append(komentarz)
+
+    if st.button("♻️ Wygeneruj nowy prompt"):
+        if komentarze:
+            nowy_prompt = prompt + ". " + ". ".join(komentarze)
+            st.markdown("🆕 **Nowy prompt:**")
+            st.code(nowy_prompt)
+        else:
+            st.info("Dodaj przynajmniej jeden komentarz.")
