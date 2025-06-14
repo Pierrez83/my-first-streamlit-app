@@ -2,7 +2,6 @@ import streamlit as st
 from PIL import Image
 from streamlit_drawable_canvas import st_canvas
 import os
-import numpy as np
 
 # --- Page Config ---
 st.set_page_config(page_title="AI Prompt Refiner", layout="centered")
@@ -32,14 +31,19 @@ with st.form("prompt_form"):
     format = st.radio("Select format:", options=["3:2", "1:1", "2:3"], horizontal=True)
 
     style = st.radio("Select style:", options=[
-        "Illustration", "Etching", "Photography", "Render", "Oil painting", "Watercolor"
+        "Studio photography",
+        "Lifestyle scene",
+        "Minimal render",
+        "Hand-drawn sketch",
+        "Flat lay",
+        "Transparent background"
     ], horizontal=True)
 
     use_sample = st.checkbox("Use sample image instead of generating with API")
 
     submitted = st.form_submit_button("🧠 Generate image")
 
-# --- Color Picker Section ---
+# --- Color Picker Section (outside form) ---
 st.markdown("**Select main colors:**")
 i = 0
 while i < len(st.session_state.colors):
@@ -90,7 +94,7 @@ if st.session_state.image_generated:
             fill_color="rgba(255, 0, 0, 0.3)" if "Remove" in st.session_state.lasso_mode else "rgba(0, 255, 0, 0.3)",
             stroke_width=3,
             stroke_color="#ff0000" if "Remove" in st.session_state.lasso_mode else "#00ff00",
-            background_image=np.array(image),
+            background_image=image,
             update_streamlit=True,
             height=960,
             width=800,
