@@ -63,7 +63,6 @@ if submitted:
     if use_sample:
         try:
             image = Image.open("sample.jpg")
-            image = image.resize((800, int(800 * image.height / image.width)))
             st.image(image, caption="Sample image", use_container_width=True)
             st.session_state.image_generated = True
         except FileNotFoundError:
@@ -86,16 +85,14 @@ if st.session_state.image_generated:
     sample_path = "sample.jpg"
     if os.path.exists(sample_path):
         image = Image.open(sample_path)
-        image = image.resize((800, int(800 * image.height / image.width)))
-
         canvas_result = st_canvas(
             fill_color="rgba(255, 0, 0, 0.3)" if "Remove" in st.session_state.lasso_mode else "rgba(0, 255, 0, 0.3)",
             stroke_width=3,
             stroke_color="#ff0000" if "Remove" in st.session_state.lasso_mode else "#00ff00",
             background_image=image,
             update_streamlit=True,
-            height=image.height,
-            width=image.width,
+            height=960,
+            width=800,
             drawing_mode="rect",
             key="canvas",
         )
