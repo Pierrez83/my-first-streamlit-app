@@ -1,2 +1,6 @@
 openai
+streamlit
+openai
 streamlit-drawable-canvas
+Pillow
+requests
