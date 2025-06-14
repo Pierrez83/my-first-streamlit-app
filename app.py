@@ -4,7 +4,7 @@ import openai
 st.set_page_config(page_title="AI Prompt Refiner", layout="centered")
 st.title("🔁 AI Prompt Refiner – wersja demo")
 
-api_key = st.text_input("🔑 Wklej swój OpenAI API Key", type="password")
+openai.api_key = st.secrets["openai"]["api_key"]
 prompt = st.text_input("✏️ Twój prompt (np. butelka e-liquidu w stylu zen):")
 
 # PRZYCISK: generuj pierwszy obraz
