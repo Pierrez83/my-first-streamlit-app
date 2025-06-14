@@ -1,5 +1,5 @@
 import streamlit as st
-from PIL import Image
+from PIL import Image, ImageDraw
 import os
 
 # --- Page Config ---
@@ -76,16 +76,30 @@ if st.session_state.image_generated:
     st.markdown("### ✅ Step 2: Modify")
     st.markdown("*Focus on large structural changes to the image. Details like texture, lighting, or text should be added in Step 3: Refine.*")
 
-    st.markdown("**Lasso tool mockup:**")
-    st.session_state.lasso_mode = st.radio("Select lasso mode:", ["Keep (🟢)", "Remove (🔴)"])
+    st.markdown("**Mark area directly on sample image (rectangular coordinates):**")
+    st.session_state.lasso_mode = st.radio("Select mode:", ["Keep (🟢)", "Remove (🔴)"])
 
-    st.file_uploader("Upload a lasso-marked image (mockup only):", type=["jpg", "png"], key="lasso_upload")
+    with st.form("region_selector"):
+        x = st.number_input("X (left)", min_value=0, value=0)
+        y = st.number_input("Y (top)", min_value=0, value=0)
+        width = st.number_input("Width", min_value=1, value=100)
+        height = st.number_input("Height", min_value=1, value=100)
+        desc = st.text_area("Describe what this selection means:", placeholder="e.g. Remove the tree from the bottom-left")
+        confirm = st.form_submit_button("➕ Add region")
 
-    with st.form("lasso_instruction_form"):
-        lasso_desc = st.text_area("Describe what the marked area should represent:", placeholder="e.g. Remove the red object in the bottom-left")
-        save_instr = st.form_submit_button("➕ Add instruction")
-        if save_instr and lasso_desc.strip():
-            st.session_state.modifications.append(f"[{st.session_state.lasso_mode}] {lasso_desc.strip()}")
+    if confirm:
+        region_info = f"[{st.session_state.lasso_mode}] Rectangle at ({x},{y},{width},{height}) – {desc.strip()}"
+        st.session_state.modifications.append(region_info)
+
+        # Draw rectangle preview (optional)
+        try:
+            img = Image.open("sample.jpg").convert("RGB")
+            draw = ImageDraw.Draw(img)
+            color = "green" if "Keep" in st.session_state.lasso_mode else "red"
+            draw.rectangle([x, y, x + width, y + height], outline=color, width=4)
+            st.image(img, caption="Preview with marked region", use_container_width=True)
+        except Exception as e:
+            st.warning(f"Preview failed: {e}")
 
     if st.session_state.modifications:
         st.markdown("#### 📝 Current modifications queue:")
